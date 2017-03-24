@@ -13,7 +13,7 @@ UrlDownloadToFile, http://i.imgur.com/KGYrdR4.png, LSPD.png
 UPDATERS: This next part checks for updates of this app or AHK.
 UPDATE INFO: https://www.dropbox.com/s/8rvndpkvb78rhnc/LSPDCalc.ini?dl=1
 */
-AppVersion:=1.3
+AppVersion:=1.4
 
 SplashImage, LSPD.png,, Downloading Update Info..., Checking for Updates...
 FileDelete, LSPDUpdateInfo.ini
@@ -21,7 +21,10 @@ UrlDownloadToFile, https://www.dropbox.com/s/8rvndpkvb78rhnc/LSPDCalc.ini?dl=1, 
 SplashImage, Off
 IniRead, LatestAHK, LSPDUpdateInfo.ini, AHK, Latest, 0
 If not LatestAHK
+{
 	MsgBox, 16,, Upatater Error: Could not find the update info file. Please make sure you have an internet connection, then restart the app to check for updates.
+	UpdaterError:=True
+}
 Else
 {
 	If A_AHKVersion != %LatestAHK%
@@ -49,47 +52,36 @@ Else
 		}
 	}
 }
-
-IniRead, LatestApp, LSPDUpdateInfo.ini, App, Latest, 0
-If Not LatestApp
+If not UpdaterError
 {
-	MsgBox, 16,, Upatater Error: Could not find the update info file. Please make sure you have an internet connection, then restart the app to check for updates.
-}
-Else
-{
-	If AppVersion != %LatestApp%
+	IniRead, LatestApp, LSPDUpdateInfo.ini, App, Latest, 0
+	If Not LatestApp
 	{
-		MsgBox, 68,, This LSPD Calculator is out of date! You would like to automatically download a new one?`n`nYour Version: %AppVersion%`nLatest Version: %LatestApp%
-		IfMsgBox Yes
+		MsgBox, 16,, Upatater Error: Could not find the update info file. Please make sure you have an internet connection, then restart the app to check for updates.
+	}
+	Else
+	{
+		If AppVersion != %LatestApp%
 		{
-			SplashImage, LSPD.png,, Checking Update Link..., Downloading App Update...
-			IniRead, LatestAppDownload, LSPDUpdateInfo.ini, App, Download
-			SplashImage, LSPD.png,, Creating Downloads Folder..., Downloading App Update...
-			FileCreateDir, Downloads
-			SplashImage, LSPD.png,, Downloading App..., Downloading App Update...
-			UrlDownloadToFile, %LatestAppDownload%, Downloads\LSPDCalc-%LatestApp%.ahk
-			SplashImage, Off
-			MsgBox, 64,, Done downloading the update! Please check the Downloads folder for the version you need to install.
-			ExitApp
+			MsgBox, 68,, This LSPD Calculator is out of date! You would like to automatically download a new one?`n`nYour Version: %AppVersion%`nLatest Version: %LatestApp%
+			IfMsgBox Yes
+			{
+				SplashImage, LSPD.png,, Checking Update Link..., Downloading App Update...
+				IniRead, LatestAppDownload, LSPDUpdateInfo.ini, App, Download
+				SplashImage, LSPD.png,, Creating Downloads Folder..., Downloading App Update...
+				FileCreateDir, Downloads
+				SplashImage, LSPD.png,, Downloading App..., Downloading App Update...
+				UrlDownloadToFile, %LatestAppDownload%, Downloads\LSPDCalc-%LatestApp%.ahk
+				SplashImage, Off
+				MsgBox, 64,, Done downloading the update! Please check the Downloads folder for the version you need to install.
+				ExitApp
+			}
 		}
 	}
 }
-
-
-
-
-If A_AHKVersion < 1.1.23.00
-{
-	MsgBox, 16,, Due to a mechanic used in this app, you need to update to version 1.1.23.00 of AHK or higher before using this app.`nPlease restart the app and use the built-in auto updater.
-	ExitApp
-}
-
 /*
 THE REST OF THIS IS THE ACTUAL SCRIPT ITSELF
 */
-
-#If not (A_AHKVersion < 1.1.23.00)
-
 
 StringTrimRight, SettingsFile, A_ScriptName, 4
 SettingsFile = %SettingsFile%.ini
@@ -139,7 +131,8 @@ Return
 LSPDCalc:
 	Gui, Destroy
 	Gui, Add, Edit, gUpdateTimes x10 w500 vCrimScum, John_Doe
-	Gui, Add, Tab3, vMainTabs w1000, Vehicular Infractions|Vehicular Misdemeanors|Vehicular Felonies|INFRACTIONS|MISDEMEANORS|FELONIES|Narcotics|Materials
+	Gui, Add, Button, gLSPDCalc x522 y5, Reset Values
+	Gui, Add, Tab3, vMainTabs w1000 x10, Vehicular Infractions|Vehicular Misdemeanors|Vehicular Felonies|INFRACTIONS|MISDEMEANORS|FELONIES|Narcotics|Materials
 	Gui, Tab, Vehicular Infractions
 	Gui, Add, Checkbox, gUpdateTimes vIllegalParking, Illegal Parking
 	Gui, Add, Checkbox, gUpdateTimes vIllegalShortcut, Illegal Shortcut
@@ -280,9 +273,9 @@ Return
 
 Arrest:
 	If not FineArrest
-	FineCash = 0
+		FineCash = 0
 	If not StrikeArrest
-	LicenseStrikes = 0
+		LicenseStrikes = 0
 	SendInput, t^a/arrest %CrimScum% %Mins% %Bail% %LicenseStrikes% %FineCash%
 Return
 
