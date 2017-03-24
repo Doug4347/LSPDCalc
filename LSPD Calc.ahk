@@ -13,7 +13,7 @@ UrlDownloadToFile, http://i.imgur.com/KGYrdR4.png, LSPD.png
 UPDATERS: This next part checks for updates of this app or AHK.
 UPDATE INFO: https://www.dropbox.com/s/8rvndpkvb78rhnc/LSPDCalc.ini?dl=1
 */
-AppVersion:=1.2
+AppVersion:=1.3
 
 SplashImage, LSPD.png,, Downloading Update Info..., Checking for Updates...
 FileDelete, LSPDUpdateInfo.ini
@@ -238,14 +238,17 @@ LSPDCalc:
 	Gui, Tab, Narcotics
 	Gui, Add, Checkbox, gUpdateTimes x28 y80 vPotPos, Possession of Marijuana
 	Gui, Add, Checkbox, gUpdateTimes x28 y100 vCokePos, Possession of Cocaine
-	Gui, Add, Checkbox, gUpdateTimes x28 y120 vSpeedPos, Possession of Amphetamine
+	Gui, Add, Checkbox, gUpdateTimes x28 y120 vSpeedPos, Possession of Amphetamine (Speed)
+	Gui, Add, Checkbox, gUpdateTimes x28 y140 vMethPos, Possession of Amphetamine (Meth)
 	Gui, Add, Edit, gUpdateTimes x400 y80 w200 vPot, 0
 	Gui, Add, Edit, gUpdateTimes x400 y100 w200 vCoke, 0
 	Gui, Add, Edit, gUpdateTimes x400 y120 w200 vSpeed, 0
-	Gui, Add, Checkbox, gUpdateTimes x28 y160 vSolicitingCocaine, Soliciting of Cocaine
-	Gui, Add, Checkbox, gUpdateTimes x28 y180 vSolicitingAmphetamine, Soliciting of Amphetamine
+	Gui, Add, Edit, gUpdateTimes x400 y140 w200 vMeth, 0
+	Gui, Add, Checkbox, gUpdateTimes x28 y180 vSolicitingCocaine, Soliciting of Cocaine
 	Gui, Add, Checkbox, gUpdateTimes x28 y200 vSolicitingMarijuana, Soliciting of Marijuana
-	Gui, Add, Checkbox, gUpdateTimes x28 y220 vSmugglingContraband, Smuggling Contraband (Any Type)
+	Gui, Add, Checkbox, gUpdateTimes x28 y220 vSolicitingAmphetamine, Soliciting of Amphetamine (Speed)
+	Gui, Add, Checkbox, gUpdateTimes x28 y240 vSolicitingMeth, Soliciting of Amphetamine (Meth)
+	Gui, Add, Checkbox, gUpdateTimes x28 y280 vSmugglingContraband, Smuggling Contraband (Any Type)
 	Gui, Tab, Materials
 	Gui, Add, Checkbox, gUpdateTimes x28 y80 vStreetPos, Possession of Street Materials
 	Gui, Add, Checkbox, gUpdateTimes x28 y100 vStandardPos, Possession of Standard Materials
@@ -299,6 +302,7 @@ UpdateTimes:
 	PotTrafiking:=False
 	CokeTrafiking:=False
 	SpeedTrafiking:=False
+	MethTrafiking:=False
 	StandardMatsTrafiking:=False
 	StreetMatsTrafiking:=False
 	MilitaryMatsTrafiking:=False
@@ -975,7 +979,13 @@ UpdateTimes:
 	{
 		Mins+=20
 		If RecordingCrimes
-			Send, t^a/recordcrime %CrimScum% Soliciting of Amphetamine{Enter}
+			Send, t^a/recordcrime %CrimScum% Soliciting of Amphetamine (Speed){Enter}
+	}
+	If SolicitingMeth
+	{
+		Mins+=25
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Soliciting of Amphetamine (Meth){Enter}
 	}
 	If SolicitingMarijuana
 	{
@@ -1073,11 +1083,11 @@ UpdateTimes:
 		Mins+=120
 	}
 ;===============================================
-;===============================================	
+;===============================================
 	If SpeedPos
 	{
 		If RecordingCrimes
-			Send, t^a/recordcrime %CrimScum% Possession of Amphetamine (%Speed% Tablets){Enter}
+			Send, t^a/recordcrime %CrimScum% Possession of Amphetamine (Speed - %Speed% Tablets){Enter}
 	}	
 	If (Speed < 6) and(SpeedPos)
 	{
@@ -1115,7 +1125,60 @@ UpdateTimes:
 		Mins+=100
 	}
 ;===============================================
-	If PotTrafiking or CokeTrafiking or SpeedTrafiking
+	If MethPos
+	{
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Possession of Amphetamine (Meth - %Meth%g){Enter}
+	}	
+	If (Meth < 6) and(MethPos)
+	{
+		TicketCash+=7000
+	}
+	If (Meth > 5) and (Meth < 21) and (MethPos)
+	{
+		Mins+=15
+	}
+	If (Meth > 20) and (Meth < 41) and (MethPos)
+	{
+		Mins+=25
+	}
+	If (Meth > 40) and (Meth < 60) and (MethPos)
+	{
+		Mins+=35
+	}
+	If (Meth > 49) and (MethPos)
+	{
+		If Notes
+			Notes = %Notes%`nImpound Vehicle (50+ Grams of Meth)
+		Else
+			Notes = Impound Vehicle (50+ Grams of Meth)
+	}
+	If (Meth > 60) and (Meth < 81) and (MethPos)
+	{
+		Mins+=45
+	}
+	If (Meth > 80) and (Meth < 101) and (MethPos)
+	{
+		Mins+=65
+	}
+	If (Meth > 100) and (Meth < 121) and (MethPos)
+	{
+		Mins+=85
+	}
+	If (Meth > 120) and (Meth < 141) and (MethPos)
+	{
+		Mins+=100
+	}
+	If (Meth > 61) and (MethPos)
+	{
+		MethTrafiking:=True
+	}
+	If (Meth > 140) and (MethPos)
+	{
+		Mins+=100
+	}
+;===============================================
+	If PotTrafiking or CokeTrafiking or SpeedTrafiking or MethTrafiking
 	{
 		If Notes
 			Notes = %Notes%`nAssume Traffiking (Narcotics)
