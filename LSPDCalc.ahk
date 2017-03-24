@@ -132,7 +132,7 @@ LSPDCalc:
 	Gui, Destroy
 	Gui, Add, Edit, gUpdateTimes x10 w500 vCrimScum, John_Doe
 	Gui, Add, Button, gLSPDCalc x522 y5, Reset Values
-	Gui, Add, Tab3, vMainTabs w1000 x10, Vehicular Infractions|Vehicular Misdemeanors|Vehicular Felonies|INFRACTIONS|MISDEMEANORS|FELONIES|Narcotics|Materials
+	Gui, Add, Tab3, vMainTabs w1000 x10, Vehicular Infractions|Vehicular Misdemeanors|Vehicular Felonies|INFRACTIONS|MISDEMEANORS|FELONIES|Narcotics|Materials|Ammo
 	Gui, Tab, Vehicular Infractions
 	Gui, Add, Checkbox, gUpdateTimes vIllegalParking, Illegal Parking
 	Gui, Add, Checkbox, gUpdateTimes vIllegalShortcut, Illegal Shortcut
@@ -241,7 +241,11 @@ LSPDCalc:
 	Gui, Add, Checkbox, gUpdateTimes x28 y200 vSolicitingMarijuana, Soliciting of Marijuana
 	Gui, Add, Checkbox, gUpdateTimes x28 y220 vSolicitingAmphetamine, Soliciting of Amphetamine (Speed)
 	Gui, Add, Checkbox, gUpdateTimes x28 y240 vSolicitingMeth, Soliciting of Amphetamine (Meth)
-	Gui, Add, Checkbox, gUpdateTimes x28 y280 vSmugglingContraband, Smuggling Contraband (Any Type)
+	Gui, Add, Checkbox, gUpdateTimes x28 y280 vCokeTrafiking, Trafiking of Cocaine
+	Gui, Add, Checkbox, gUpdateTimes x28 y300 vPotTrafiking, Trafiking of Marijuana
+	Gui, Add, Checkbox, gUpdateTimes x28 y320 vSpeedTrafiking, Trafiking of Amphetamine (Speed)
+	Gui, Add, Checkbox, gUpdateTimes x28 y340 vMethTrafiking, Trafiking of Amphetamine (Meth)
+	Gui, Add, Checkbox, gUpdateTimes x28 y380 vSmugglingContraband, Smuggling Contraband (Any Type)
 	Gui, Tab, Materials
 	Gui, Add, Checkbox, gUpdateTimes x28 y80 vStreetPos, Possession of Street Materials
 	Gui, Add, Checkbox, gUpdateTimes x28 y100 vStandardPos, Possession of Standard Materials
@@ -256,7 +260,16 @@ LSPDCalc:
 	Gui, Add, Checkbox, gUpdateTimes x28 y240 vTrafikingMeleeWeapons, Trafiking Melee Weapons
 	Gui, Add, Checkbox, gUpdateTimes x28 y260 vTrafikingLowCalWeapons, Trafiking Low Caliber Weapons
 	Gui, Add, Checkbox, gUpdateTimes x28 y280 vTrafikingHighCalWeapons, Trafiking High Caliber Weapons
-	Gui, Add, Checkbox, gUpdateTimes x28 y280 vSolicitingArmour, Soliciting Illegal Body Armour
+	Gui, Add, Checkbox, gUpdateTimes x28 y300 vSolicitingArmour, Soliciting Illegal Body Armour
+	Gui, Add, Checkbox, gUpdateTimes x28 y340 vStreetMatsTrafiking, Trafiking Street Materials
+	Gui, Add, Checkbox, gUpdateTimes x28 y360 vStandardMatsTrafiking, Trafiking Standard Materials
+	Gui, Add, Checkbox, gUpdateTimes x28 y380 vMilitaryMatsTrafiking, Trafiking Military Materials
+	Gui, Tab, Ammo
+	Gui, Add, Checkbox, gUpdateTimes x28 y80 vAmmoPos, Possession of Illegal Bullets
+	Gui, Add, Edit, gUpdateTimes x400 y80 w200 vAmmo, 0
+	Gui, Add, Checkbox, gUpdateTimes x28 y100 vSolicitingAmmo, Soliciting Bullets
+	Gui, Add, Checkbox, gUpdateTimes x28 y120 vAmmoTrafiking, Trafiking Bullets
+	; Gui, Add, Checkbox, gUpdateTimes x28 y380 , Smuggling Bullets
 	Gui, Tab,
 	Gui, Add, Checkbox, x28 gUpdateTimes vFineArrest, Include Fine on /arrest
 	Gui, Add, Checkbox, x28 gUpdateTimes vStrikeArrest, Include Strikes on /arrest
@@ -292,6 +305,7 @@ UpdateTimes:
 	FineCash:=0
 	LicenseStrikes:=0
 	Notes = 
+	/*
 	PotTrafiking:=False
 	CokeTrafiking:=False
 	SpeedTrafiking:=False
@@ -299,6 +313,8 @@ UpdateTimes:
 	StandardMatsTrafiking:=False
 	StreetMatsTrafiking:=False
 	MilitaryMatsTrafiking:=False
+	AmmoTrafiking:=False
+	*/
 	Bail = Yes
 	If BrandishingFirearm
 	{
@@ -1013,10 +1029,12 @@ UpdateTimes:
 	{
 		Mins+=20
 	}
+	/*
 	If (Pot > 100) and (PotPos)
 	{
 		PotTrafiking:=True
 	}
+	*/
 	If (Pot > 200) and (PotPos)
 	{
 		Mins+=30
@@ -1067,10 +1085,12 @@ UpdateTimes:
 	{
 		Mins+=100
 	}
+	/*
 	If (Coke > 60) and (CokePos)
 	{
 		CokeTrafiking:=True
 	}
+	*/
 	If (Coke > 140) and (CokePos)
 	{
 		Mins+=120
@@ -1109,10 +1129,12 @@ UpdateTimes:
 	{
 		Mins+=80
 	}
+	/*
 	If (Speed > 60) and (SpeedPos)
 	{
 		SpeedTrafiking:=True
 	}
+	*/
 	If (Speed > 201) and (SpeedPos)
 	{
 		Mins+=100
@@ -1162,10 +1184,12 @@ UpdateTimes:
 	{
 		Mins+=100
 	}
+	/*
 	If (Meth > 61) and (MethPos)
 	{
 		MethTrafiking:=True
 	}
+	*/
 	If (Meth > 140) and (MethPos)
 	{
 		Mins+=100
@@ -1185,14 +1209,16 @@ UpdateTimes:
 			If CokeTrafiking
 				Send, t^a/recordcrime %CrimScum% Trafiking of Contraband (Cocaine){Enter}
 			If SpeedTrafiking
-				Send, t^a/recordcrime %CrimScum% Trafiking of Contraband (Amphetamine){Enter}
+				Send, t^a/recordcrime %CrimScum% Trafiking of Contraband (Amphetamine - Speed){Enter}
+			If MethTrafiking
+				Send, t^a/recordcrime %CrimScum% Trafiking of Contraband (Amphetamine - Meth){Enter}
 		}
 	}
 
 ;===============================================
 	If StreetPos
 		If RecordingCrimes
-			Send, t^a/recordcrime %CrimScum% Possession of Street Materials (%StreetMats% Mats){Enter}
+			Send, t^a/recordcrime %CrimScum% Possession of Street Materials (%StreetMats%){Enter}
 	If (StreetMats > 30) and (StreetMats < 61) and (StreetPos)
 	{
 		Mins+=10
@@ -1220,10 +1246,12 @@ UpdateTimes:
 	{
 		Mins+=50
 	}
+	/*
 	If (StreetMats > 90) and (StreetPos)
 	{
 		StreetMatsTrafiking:=True
 	}
+	*/
 	If (StreetMats > 300) and (StreetPos)
 	{
 		Mins+=60
@@ -1232,7 +1260,7 @@ UpdateTimes:
 ;===============================================
 	If StandardPos
 		If RecordingCrimes
-			Send, t^a/recordcrime %CrimScum% Possession of Standard Materials (%StandardMats% Mats){Enter}
+			Send, t^a/recordcrime %CrimScum% Possession of Standard Materials (%StandardMats%){Enter}
 	If (StandardMats < 30) and (StandardPos)
 	{
 		Mins+=10
@@ -1264,10 +1292,12 @@ UpdateTimes:
 	{
 		Mins+=55
 	}
+	/*
 	If (StandardMats > 90) and (StandardPos)
 	{
 		StandardMatsTrafiking:=True
 	}
+	*/
 	If (StandardMats > 300) and (StandardPos)
 	{
 		Mins+=65
@@ -1276,7 +1306,7 @@ UpdateTimes:
 ;===============================================
 	If MilitaryPos
 		If RecordingCrimes
-			Send, t^a/recordcrime %CrimScum% Possession of Military Materials (%MilitaryMats% Mats){Enter}
+			Send, t^a/recordcrime %CrimScum% Possession of Military Materials (%MilitaryMats%){Enter}
 	If (MilitaryMats < 30) and (MilitaryPos)
 	{
 		Mins+=20
@@ -1308,10 +1338,12 @@ UpdateTimes:
 	{
 		Mins+=65
 	}
+	/*
 	If (MilitaryMats > 90) and (MilitaryPos)
 	{
 		MilitaryMatsTrafiking:=True
 	}
+	*/
 	If (MilitaryMats > 300) and (MilitaryPos)
 	{
 		Mins+=75
@@ -1319,7 +1351,7 @@ UpdateTimes:
 ;===============================================
 	If StandardMatsTrafiking
 	{
-		Mins+=30If Notes
+		Mins+=30
 		If Notes
 			Notes = %Notes%`nAssume Traffiking (Standard Mats)
 		Else
@@ -1329,7 +1361,7 @@ UpdateTimes:
 	}
 	If StreetMatsTrafiking
 	{
-		Mins+=50If Notes
+		Mins+=50
 		If Notes
 			Notes = %Notes%`nAssume Traffiking (Street Mats)
 		Else
@@ -1339,7 +1371,7 @@ UpdateTimes:
 	}
 	If MilitaryMatsTrafiking
 	{
-		Mins+=60If Notes
+		Mins+=60
 		If Notes
 			Notes = %Notes%`nAssume Traffiking (Millitary Mats)
 		Else
@@ -1348,11 +1380,69 @@ UpdateTimes:
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Trafiking Military Materials{Enter}
 	}
-	
+; ======================================================
+
+	If AmmoPos
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Possession of Illegal Ammunition (%Ammo%){Enter}
+	If (Ammo < 10) and (AmmoPos)
+	{
+		FineCash+=5000
+	}
+	If (Ammo > 10) and (Ammo < 31) and (AmmoPos)
+	{
+		Mins+=15
+	}
+	If (Ammo > 30) and (Ammo < 51) and (AmmoPos)
+	{
+		Mins+=25
+	}
+	If (Ammo > 50) and (Ammo < 80) and (AmmoPos)
+	{
+		Mins+=35
+	}
+	If (Ammo > 79) and (AmmoPos)
+	{
+		If Notes
+			Notes = %Notes%`nImpound Vehicle (80+ Bullets)
+		Else
+			Notes = Impound Vehicle (80+ Bullets)
+	}
+	If (Ammo > 80) and (Ammo < 101) and (AmmoPos)
+	{
+		Mins+=45
+	}
+	If (Ammo > 100) and (Ammo < 121) and (AmmoPos)
+	{
+		Mins+=65
+	}
+	If (Ammo > 120) and (Ammo < 141) and (AmmoPos)
+	{
+		Mins+=85
+	}
+	If (Ammo > 140) and (Ammo < 161) and (AmmoPos)
+	{
+		Mins+=100
+	}
+	/*
+	If (Ammo > 80) and (AmmoPos)
+	{
+		AmmoTrafiking:=True
+	}
+	*/
+	If (Ammo > 160) and (AmmoPos)
+	{
+		Mins+=120
+	}
+; ======================================================
+	MaxTimeMessage:=
 	If Mins > 120
+	{
+		MaxTimeMessage = (%Mins% Total)
 		Mins:=120
+	}
 	If not Notes
 		Notes = None
-	GuiControl, Text, EditableText, Ticket Total: $%TicketCash%`nTime Total: %Mins% Mins`nFine Total: $%FineCash%`nLicense Strikes: %LicenseStrikes% Strikes`nBail: %Bail%
+	GuiControl, Text, EditableText, Ticket Total: $%TicketCash%`nTime Total: %Mins% Mins %MaxTimeMessage%`nFine Total: $%FineCash%`nLicense Strikes: %LicenseStrikes% Strikes`nBail: %Bail%
 	GuiControl, Text, EditableTextNotes, Notes:`n%Notes%
 Return
