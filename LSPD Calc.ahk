@@ -13,7 +13,7 @@ UrlDownloadToFile, http://i.imgur.com/KGYrdR4.png, LSPD.png
 UPDATERS: This next part checks for updates of this app or AHK.
 UPDATE INFO: https://www.dropbox.com/s/8rvndpkvb78rhnc/LSPDCalc.ini?dl=1
 */
-AppVersion:=1.1
+AppVersion:=1.2
 
 SplashImage, LSPD.png,, Downloading Update Info..., Checking for Updates...
 FileDelete, LSPDUpdateInfo.ini
@@ -177,6 +177,7 @@ LSPDCalc:
 	Gui, Add, Checkbox, gUpdateTimes vMeleeWeaponSoliciting, Soliciting of a Melee Weapon
 	Gui, Add, Checkbox, gUpdateTimes vLowCalWeaponSemiAutomatic, Unlawful Possession of a Low Caliber Weapon (Semi-Automatic)
 	Gui, Add, Checkbox, gUpdateTimes vLowCalWeaponFullyAutomatic, Unlawful Possession of a Low Caliber Weapon (Fully-Automatic)
+	Gui, Add, Checkbox, gUpdateTimes vBrandishingFirearm, Brandishing a Firearm
 	Gui, Add, Checkbox, gUpdateTimes vValidIDFailure, Failure to Provide Valid Identification
 	Gui, Add, Checkbox, gUpdateTimes vCounterfeitDocs, Possession of Counterfeit Documentation
 	Gui, Add, Checkbox, gUpdateTimes vSolicitingLowCal, Soliciting Low Caliber Weapons
@@ -195,7 +196,7 @@ LSPDCalc:
 	Gui, Add, Checkbox, gUpdateTimes vCounterfeitProduction, Trafficking/Production of Counterfeit Documentation
 	Gui, Add, Checkbox, gUpdateTimes v911Misuse, Wasting Police Time (misuse of 911 | Uses Custom Time)
 	Gui, Tab, FELONIES
-	Gui, Add, Checkbox, gUpdateTimes x28 y80 vHighCalWeaponPossession, Unlawful Possession of a High Caliber Firearm(M4, AK, Combat, Sniper)
+	Gui, Add, Checkbox, gUpdateTimes x28 y80 vHighCalWeaponPossession, Unlawful Possession of a High Caliber Firearm (M4, AK, Combat, Sniper)
 	Gui, Add, Checkbox, gUpdateTimes x28 y100 vDeaglePossession, Unlawful Possession of a Desert Eagle
 	Gui, Add, Checkbox, gUpdateTimes x28 y120 vHighCalWeaponSoliciting, Soliciting High Caliber Weapons
 	Gui, Add, Checkbox, gUpdateTimes x28 y140 vDeagleSoliciting, Soliciting Desert Eagle
@@ -235,9 +236,9 @@ LSPDCalc:
 	Gui, Add, Checkbox, gUpdateTimes x400 y420 vCorruption, Corruption
 	Gui, Add, Checkbox, gUpdateTimes x400 y440 vPiracy, Piracy (Of boats, not media.)
 	Gui, Tab, Narcotics
-	Gui, Add, Checkbox, gUpdateTimes x28 y80 vPotPos, Possession of Pot
-	Gui, Add, Checkbox, gUpdateTimes x28 y100 vCokePos, Possession of Coke
-	Gui, Add, Checkbox, gUpdateTimes x28 y120 vSpeedPos, Possession of Speed
+	Gui, Add, Checkbox, gUpdateTimes x28 y80 vPotPos, Possession of Marijuana
+	Gui, Add, Checkbox, gUpdateTimes x28 y100 vCokePos, Possession of Cocaine
+	Gui, Add, Checkbox, gUpdateTimes x28 y120 vSpeedPos, Possession of Amphetamine
 	Gui, Add, Edit, gUpdateTimes x400 y80 w200 vPot, 0
 	Gui, Add, Edit, gUpdateTimes x400 y100 w200 vCoke, 0
 	Gui, Add, Edit, gUpdateTimes x400 y120 w200 vSpeed, 0
@@ -257,7 +258,7 @@ LSPDCalc:
 	Gui, Add, Checkbox, gUpdateTimes x28 y200 vTrafikingStandardArmour, Trafiking Standard Armour
 	Gui, Add, Checkbox, gUpdateTimes x28 y220 vTrafikingMilitaryArmour, Trafiking Military Armour
 	Gui, Add, Checkbox, gUpdateTimes x28 y240 vTrafikingMeleeWeapons, Trafiking Melee Weapons
-	Gui, Add, Checkbox, gUpdateTimes x28 y260 vTrafikingLowWeapons, Trafiking Low Caliber Weapons
+	Gui, Add, Checkbox, gUpdateTimes x28 y260 vTrafikingLowCalWeapons, Trafiking Low Caliber Weapons
 	Gui, Add, Checkbox, gUpdateTimes x28 y280 vTrafikingHighCalWeapons, Trafiking High Caliber Weapons
 	Gui, Add, Checkbox, gUpdateTimes x28 y280 vSolicitingArmour, Soliciting Illegal Body Armour
 	Gui, Tab,
@@ -267,8 +268,10 @@ LSPDCalc:
 	Gui, Add, Edit, x28 w250 vCustomFine gUpdateTimes, 0
 	Gui, Add, Text, x28, Custom Time:
 	Gui, Add, Edit, x28 w250 vCustomTime gUpdateTimes, 0
-	Gui, Add, Text, x28 w365 r15 vEditableText, Ticket Total: $%TicketCash%`nTime Total: %Mins% Mins`nFine Total: $%FineCash%`nLicense Strikes: %LicenseStrikes% Strikes`nNotes:`nBail: %Bail%`n%Notes%
-	Gui, Add, Pic, x389 y480, LSPD.png
+	Gui, Add, Text, x28 w250 r15 vEditableText, Ticket Total: $%TicketCash%`nTime Total: %Mins% Mins`nFine Total: $%FineCash%`nLicense Strikes: %LicenseStrikes% Strikes`nBail: %Bail%
+	Gui, Add, Pic, x300 y500, LSPD.png
+	Gui, Add, Text, x600 w400 y500 r20 vEditableTextNotes, Notes:`n%Notes%
+	GoSub, UpdateTimes
 	Gui, Show
 Return
 
@@ -281,7 +284,9 @@ Arrest:
 Return
 
 RecordCrimes:
-	MsgBox, Crimes
+	RecordingCrimes:=True
+	Gosub, UpdateTimes
+	RecordingCrimes:=False
 Return
 
 UpdateTimes:
@@ -298,6 +303,12 @@ UpdateTimes:
 	StreetMatsTrafiking:=False
 	MilitaryMatsTrafiking:=False
 	Bail = Yes
+	If BrandishingFirearm
+	{
+		Mins+=30
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Brandishing a Firearm{Enter}
+	}
 	If IllegalParking
 	{
 		TicketCash+=3000
@@ -341,432 +352,649 @@ UpdateTimes:
 	If AcceptTicketFailure
 	{
 		Mins+=10
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Failure To Accept a Ticket{Enter}
 	}
 	If UnregisteredVehicle
 	{
 		Mins+=15
 		If LicenseStrikes < 2
 			LicenseStrikes:=2
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Driving an unregistered vehicle{Enter}
 	}
 	If LicenseFailure
 	{
 		Mins+=20
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Failure to Provide License{Enter}
 	}
 	If VehicleEvading
 	{
 		Mins+=30
 		If LicenseStrikes < 2
 			LicenseStrikes:=2
+		If Notes
+			Notes = %Notes%`nNot to be stacked with "Evading a police officer on foot" (Evading in a vehicle)
+		Else
+			Notes = Not to be stacked with "Evading a police officer on foot" (Evading in a vehicle)
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Evading an LEO (Vehicle){Enter}
 	}
 	If TicketPayTime
 	{
-		TicketCash+=5000
+		Mins+=20
 		FineCash:=CustomFine
+		If Notes
+			Notes = %Notes%`nCustom Fine = 3 times the ticket price (Failure to pay a ticket on time)
+		Else
+			Notes = Custom Fine = 3 times the ticket price (Failure to pay a ticket on time)
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Failure to pay a ticket on time{Enter}
 	}
 	If AttemptedGTA
 	{
 		Mins+=25
 		If LicenseStrikes < 3
 			LicenseStrikes:=3
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% (Attempted) Grand Theft Auto{Enter}
 	}
 	If DUI
 	{
 		Mins+=20
 		If LicenseStrikes < 2
 			LicenseStrikes:=2
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Driving Under the Influence{Enter}
 	}
 	If HnR
 	{
 		Mins+=30
 		If LicenseStrikes < 3
 			LicenseStrikes:=3
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Hit and Run{Enter}
 	}
 	If DwS
 	{
 		Mins+=40
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Driving While Suspended{Enter}
 	}
 	If Racing
 	{
 		Mins+=50
 		If LicenseStrikes < 3
 			LicenseStrikes:=3
+		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Street Racing{Enter}
 	}
 	If GTA
 	{
 		Mins+=35
 		If LicenseStrikes < 3
 			LicenseStrikes:=3
+		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Grand Theft Auto{Enter}
 	}
 	If VehAssualt
 	{
 		Mins+=50
 		If LicenseStrikes < 3
 			LicenseStrikes:=3
+		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Vehicular Assault{Enter}
 	}
 	If Loitering
 	{
 		Mins+=10
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Loitering{Enter}
 	}
 	If Trespassing
 	{
 		Mins+=15
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Trespassing{Enter}
 	}
 	If IndecentExposure
 	{
 		Mins+=10
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Indecent Exposure{Enter}
 	}
 	If Vandalism
 	{
 		Mins+=25
 		FineCash:=CustomFine
+		If Notes
+			Notes = %Notes%`nCustom Fine = Damages caused (Vandalism)
+		Else
+			Notes = Custom Fine = Damages caused (Vandalism)
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Vandalism{Enter}
 	}
 	If Affray
 	{
 		Mins+=20
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Affray{Enter}
 	}
 	If ResistingPhysical
 	{
 		Mins+=25
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Resisting Arrest{Enter}
 	}
 	If EvadingFoot
 	{
 		Mins+=20
 		If VehicleEvading
 			Mins-=20
+		If Notes
+			Notes = %Notes%`nNot to be stacked with "Evading a police officer in a vehicle" (Evading on Foot)
+		Else
+			Notes = Not to be stacked with "Evading a police officer in a vehicle" (Evading on Foot)
+		If RecordingCrimes
+			If not VehicleEvading
+				Send, t^a/recordcrime %CrimScum% Evading an LEO (Foot){Enter}
 	}
 	If DisorderlyConduct
 	{
 		Mins+=10
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Disorderly Conduct{Enter}
 	}
 	If AidingAbettingInfractions
 	{
 		Mins+=20
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Aiding and Abetting (Infractions){Enter}
 	}
 	If MeleeWeaponPossession
 	{
 		Mins+=15
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Unlawful Possession of a Melee Weapon{Enter}
 	}
 	If MeleeWeaponSoliciting
 	{
 		Mins+=10
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Soliciting of a Melee Weapon{Enter}
 	}
 	If LowCalWeaponSemiAutomatic
 	{
 		Mins+=30
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Unlawful Possession of a Low Caliber Weapon (Semi-Automatic){Enter}
 	}
 	If LowCalWeaponFullyAutomatic
 	{
 		Mins+=45
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Unlawful Possession of a Low Caliber Weapon (Fully-Automatic){Enter}
 	}
 	If ValidIDFailure
 	{
 		Mins+=15
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Failure to Provide ID{Enter}
 	}
 	If CounterfeitDocs
 	{
 		Mins+=20
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Possession of Counterfeit Documentation{Enter}
 	}
 	If SolicitingLowCal
 	{
 		Mins+=20
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Soliciting Low Caliber Weapons{Enter}
 	}
 	If SilencedPossession
 	{
 		Mins+=35
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Unlawful Possession of a Silenced Low Caliber Weapon{Enter}
 	}
 	If SolicitingSilenced
 	{
 		Mins+=25
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Soliciting Low Caliber Silenced Weapons{Enter}
 	}
 	If Impersonating
 	{
 		Mins+=30
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Impersonating an LEO{Enter}
 	}
 	If Obstruction
 	{
 		Mins+=40
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Obstruction of Justice{Enter}
 	}
 	If MurderConspiracy
 	{
 		Mins+=40
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Conspiracy to Commit Murder{Enter}
 	}
 	If Harassment
 	{
 		Mins+=25
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Harassment{Enter}
 	}
 	If FirearmDischargeSingle
 	{
 		Mins+=30
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Unlawful Discharge of Firearm (Single Shot){Enter}
 	}
 	If FirearmDischargeMulti
 	{
 		Mins+=40
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Unlawful Discharge of Firearm (Multiple shots){Enter}
 	}
 	If PEndangerment
 	{
 		Mins+=30
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Public Endangerment{Enter}
 	}
 	If Fraud
 	{
 		Mins+=25
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Fraud{Enter}
 	}
 	If LyingToLEO
 	{
 		Mins+=25
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Lying to an LEO in function{Enter}
 	}
 	If AidingAbettingMisdemeanors
 	{
 		Mins+=30
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Aiding and Abetting (Misdemeanors){Enter}
 	}
 	If CounterfeitProduction
 	{
 		Mins+=30
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Trafficking/Production of Counterfeit Documentation{Enter}
 	}
 	If 911Misuse
 	{
 		Mins+=CustomTime
+		If Notes
+			Notes = %Notes%`nCustom Time = 10-30 mins (Misuse of 911)
+		Else
+			Notes = Custom Time = 10-30 mins (Misuse of 911)
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Misuse of 911{Enter}
 	}
 	If HighCalWeaponPossession
 	{
 		Mins+=60
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Unlawful Possession of a High Caliber Firearm{Enter}
 	}
 	If DeaglePossession
 	{
 		Mins+=45
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Unlawful Possession of a Desert Eagle{Enter}
 	}
 	If HighCalWeaponSoliciting
 	{
 		Mins+=40
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Soliciting High Caliber Weapons{Enter}
 	}
 	If DeagleSoliciting
 	{
 		Mins+=30
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Soliciting Desert Eagle{Enter}
 	}
 	If Manslaughter
 	{
 		Mins+=30
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Manslaughter{Enter}
 	}
 	If MurderAccessory
 	{
 		Mins+=50
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Accessory to Murder{Enter}
 	}
 	If AttemptedMurder
 	{
 		Mins+=60
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Attempted Murder{Enter}
 	}
 	If AttemptedMurderLEO
 	{
 		Mins+=90
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Attempted Murder of an LEO{Enter}
 	}
 	If MurderAccomplice
 	{
 		Mins+=90
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Accomplice to Murder{Enter}
 	}
 	If InstigatingAnarchy
 	{
 		Mins+=30
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Instigating Public Anarchy{Enter}
 	}
 	If Racketeering
 	{
 		Mins+=120
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Racketeering{Enter}
 	}
 	If Kidnapping
 	{
 		Mins+=100
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Kidnapping{Enter}
 	}
 	If KidnappingLEO
 	{
 		Mins+=120
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Kidnapping an LEO{Enter}
 	}
 	If AttemptedRobbery
 	{
 		Mins+=30
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Attempted Robbery{Enter}
 	}
 	If Robbery
 	{
 		Mins+=45
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Robbery{Enter}
 	}
 	If ArmedRobbery
 	{
 		Mins+=60
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Armed Robbery{Enter}
 	}
 	If Burglary
 	{
 		Mins+=25
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Burglary{Enter}
 	}
 	If Gambling
 	{
 		Mins+=40
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Illegal Gambling{Enter}
 	}
 	If Bribery
 	{
 		Mins+=60
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Bribery{Enter}
 	}
 	If Assault
 	{
 		Mins+=20
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Assault{Enter}
 	}
 	If AssaultLEO
 	{
 		Mins+=30
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Assault of an LEO{Enter}
 	}
 	If Battery
 	{
 		Mins+=50
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Battery{Enter}
 	}
 	If BatteryLEO
 	{
 		Mins+=70
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Battery of an LEO{Enter}
 	}
 	If BatteryWeap
 	{
 		Mins+=70
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Battery with a deadly weapon{Enter}
 	}
 	If BatteryWeapLEO
 	{
 		Mins+=80
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Battery with a deadly weapon of an LEO{Enter}
 	}
 	If Extortion
 	{
 		Mins+=30
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Extortion{Enter}
 	}
 	If Scamming
 	{
 		Mins+=40
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Scamming{Enter}
 	}
 	If Arson
 	{
 		Mins+=30
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Arson{Enter}
 	}
 	If AidingAbettingCapital
 	{
 		Mins+=60
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Aiding and Abetting (Felonies){Enter}
 	}
 	If FugitiveHarboring
 	{
 		Mins+=60
 		Bail = No
+		If Notes
+			Notes = %Notes%`nImpound Vehicle (Harboring a Fugitive in a Vehicle)
+		Else
+			Notes = Impound Vehicle (Harboring a Fugitive in a Vehicle)
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Harboring a Fugitive{Enter}
 	}
 	If ExplosivesPossession
 	{
 		Mins+=90
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Possession of Explosives{Enter}
 	}
 	If TerrorismConspiracy
 	{
 		Mins+=100
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Conspiracy to Commit Terrorism{Enter}
 	}
 	If DomesticTerrorism
 	{
 		Mins+=120
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Domestic Terrorism{Enter}
 	}
 	If Murder
 	{
 		Mins+=120
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Murder{Enter}
 	}
 	If MurderLEO
 	{
 		Mins+=120
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Murder of an LEO{Enter}
 	}
 	If MassMurder
 	{
 		Mins+=120
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Mass Murder{Enter}
 	}
 	If Corruption
 	{
 		Mins+=120
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Corruption{Enter}
 	}
 	If Piracy
 	{
 		Mins+=60
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Piracy{Enter}
 	}
 	If SolicitingMaterials
 	{
 		Mins+=30
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Soliciting of Materials{Enter}
 	}
 	If TrafikingStreetArmour
 	{
 		Mins+=40
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Trafiking Street Armour{Enter}
 	}
 	If TrafikingStandardArmour
 	{
 		Mins+=50
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Trafiking Standard Armour{Enter}
 	}
 	If TrafikingMilitaryArmour
 	{
 		Mins+=60
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Trafiking Military Armour{Enter}
 	}
 	If TrafikingMeleeWeapons
 	{
 		Mins+=25
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Trafiking Melee Weapons{Enter}
 	}
-	If TrafikingLowWeapons
+	If TrafikingLowCalWeapons
 	{
 		Mins+=40
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Trafiking Low Caliber Weapons{Enter}
 	}
 	If TrafikingHighCalWeapons
 	{
 		Mins+=80
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Trafiking High Caliber Weapons{Enter}
 	}
 	If SolicitingArmour
 	{
 		Mins+=25
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Soliciting Illegal Body Armour{Enter}
 	}
 	If SolicitingCocaine
 	{
 		Mins+=20
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Soliciting of Cocaine{Enter}
 	}
 	If SolicitingAmphetamine
 	{
 		Mins+=20
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Soliciting of Amphetamine{Enter}
 	}
 	If SolicitingMarijuana
 	{
 		Mins+=10
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Soliciting of Marijuana{Enter}
 	}
 	If SmugglingContraband
 	{
 		Mins+=50
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Smuggling Contraband{Enter}
 	}
-;===============================================	
+;===============================================
+	If PotPos
+	{
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Possession of Marijuana (%Pot%g){Enter}
+	}
 	If (Pot > 20) and (Pot < 101) and (PotPos)
 	{
 		Mins+=10
@@ -791,7 +1019,12 @@ UpdateTimes:
 		Mins+=30
 	}
 ;===============================================
-;===============================================	
+;===============================================
+	If CokePos
+	{
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Possession of Cocaine (%Coke%g){Enter}
+	}	
 	If (Coke < 6) and (CokePos)
 	{
 		TicketCash+=5000
@@ -841,6 +1074,11 @@ UpdateTimes:
 	}
 ;===============================================
 ;===============================================	
+	If SpeedPos
+	{
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Possession of Amphetamine (%Speed% Tablets){Enter}
+	}	
 	If (Speed < 6) and(SpeedPos)
 	{
 		TicketCash+=5000
@@ -879,10 +1117,26 @@ UpdateTimes:
 ;===============================================
 	If PotTrafiking or CokeTrafiking or SpeedTrafiking
 	{
+		If Notes
+			Notes = %Notes%`nAssume Traffiking (Narcotics)
+		Else
+			Notes = Assume Traffiking (Narcotics)
 		Mins+=40
+		If RecordingCrimes
+		{
+			If PotTrafiking
+				Send, t^a/recordcrime %CrimScum% Trafiking of Contraband (Marijuana){Enter}
+			If CokeTrafiking
+				Send, t^a/recordcrime %CrimScum% Trafiking of Contraband (Cocaine){Enter}
+			If SpeedTrafiking
+				Send, t^a/recordcrime %CrimScum% Trafiking of Contraband (Amphetamine){Enter}
+		}
 	}
 
-;===============================================	
+;===============================================
+	If StreetPos
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Possession of Street Materials (%StreetMats% Mats){Enter}
 	If (StreetMats > 30) and (StreetMats < 61) and (StreetPos)
 	{
 		Mins+=10
@@ -919,7 +1173,10 @@ UpdateTimes:
 		Mins+=60
 	}
 ;===============================================
-;===============================================	
+;===============================================
+	If StandardPos
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Possession of Standard Materials (%StandardMats% Mats){Enter}
 	If (StandardMats < 30) and (StandardPos)
 	{
 		Mins+=10
@@ -960,7 +1217,10 @@ UpdateTimes:
 		Mins+=65
 	}
 ;===============================================
-;===============================================	
+;===============================================
+	If MilitaryPos
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Possession of Military Materials (%MilitaryMats% Mats){Enter}
 	If (MilitaryMats < 30) and (MilitaryPos)
 	{
 		Mins+=20
@@ -1003,21 +1263,40 @@ UpdateTimes:
 ;===============================================
 	If StandardMatsTrafiking
 	{
-		Mins+=30
+		Mins+=30If Notes
+		If Notes
+			Notes = %Notes%`nAssume Traffiking (Standard Mats)
+		Else
+			Notes = Assume Traffiking (Standard Mats)
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Trafiking Street Materials{Enter}
 	}
 	If StreetMatsTrafiking
 	{
-		Mins+=50
+		Mins+=50If Notes
+		If Notes
+			Notes = %Notes%`nAssume Traffiking (Street Mats)
+		Else
+			Notes = Assume Traffiking (Street Mats)
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Trafiking Standard Materials{Enter}
 	}
 	If MilitaryMatsTrafiking
 	{
-		Mins+=60
+		Mins+=60If Notes
+		If Notes
+			Notes = %Notes%`nAssume Traffiking (Millitary Mats)
+		Else
+			Notes = Assume Traffiking (Millitary Mats)
 		Bail = No
+		If RecordingCrimes
+			Send, t^a/recordcrime %CrimScum% Trafiking Military Materials{Enter}
 	}
 	
 	If Mins > 120
 		Mins:=120
 	If not Notes
 		Notes = None
-	GuiControl, Text, EditableText, Ticket Total: $%TicketCash%`nTime Total: %Mins% Mins`nFine Total: $%FineCash%`nLicense Strikes: %LicenseStrikes% Strikes`nNotes:`nBail: %Bail%`n%Notes%
+	GuiControl, Text, EditableText, Ticket Total: $%TicketCash%`nTime Total: %Mins% Mins`nFine Total: $%FineCash%`nLicense Strikes: %LicenseStrikes% Strikes`nBail: %Bail%
+	GuiControl, Text, EditableTextNotes, Notes:`n%Notes%
 Return
