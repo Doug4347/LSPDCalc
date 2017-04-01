@@ -13,7 +13,7 @@ UrlDownloadToFile, http://i.imgur.com/KGYrdR4.png, LSPD.png
 UPDATERS: This next part checks for updates of this app or AHK.
 UPDATE INFO: https://www.dropbox.com/s/8rvndpkvb78rhnc/LSPDCalc.ini?dl=1
 */
-AppVersion:=1.4
+AppVersion:=1.6
 
 SplashImage, LSPD.png,, Downloading Update Info..., Checking for Updates...
 FileDelete, LSPDUpdateInfo.ini
@@ -84,6 +84,7 @@ THE REST OF THIS IS THE ACTUAL SCRIPT ITSELF
 */
 
 StringTrimRight, SettingsFile, A_ScriptName, 4
+AppendingFile = Report.txt
 SettingsFile = %SettingsFile%.ini
 TicketCash:=0
 Mins:=0
@@ -132,7 +133,8 @@ LSPDCalc:
 	Gui, Destroy
 	Gui, Add, Edit, gUpdateTimes x10 w500 vCrimScum, John_Doe
 	Gui, Add, Button, gLSPDCalc x522 y5, Reset Values
-	Gui, Add, Tab3, vMainTabs w1000 x10, Vehicular Infractions|Vehicular Misdemeanors|Vehicular Felonies|INFRACTIONS|MISDEMEANORS|FELONIES|Narcotics|Materials|Ammo
+	Gui, Add, Button, gGenerateReport x600 y5, Generate Report
+	Gui, Add, Tab3, vMainTabs w1000 x10, Vehicular Infractions|Vehicular Misdemeanors|Vehicular Felonies|INFRACTIONS|MISDEMEANORS|FELONIES|Narcotics|Materials|Ammo|Report Info
 	Gui, Tab, Vehicular Infractions
 	Gui, Add, Checkbox, gUpdateTimes vIllegalParking, Illegal Parking
 	Gui, Add, Checkbox, gUpdateTimes vIllegalShortcut, Illegal Shortcut
@@ -270,6 +272,26 @@ LSPDCalc:
 	Gui, Add, Checkbox, gUpdateTimes x28 y100 vSolicitingAmmo, Soliciting Bullets
 	Gui, Add, Checkbox, gUpdateTimes x28 y120 vAmmoTrafiking, Trafiking Bullets
 	; Gui, Add, Checkbox, gUpdateTimes x28 y380 , Smuggling Bullets
+	Gui, Tab, Report Info
+	Gui, Add, Text, x28 y80, Offender's Phone number(s)
+	Gui, Add, Edit, gUpdateTimes x400 y80 w200 vPhones
+	Gui, Add, Text, x28 y100, Offender's House
+	Gui, Add, Edit, gUpdateTimes x400 y100 w200 vHouse
+	Gui, Add, Text, x28 y120, Offender's Business
+	Gui, Add, Edit, gUpdateTimes x400 y120 w200 vBusiness
+	Gui, Add, Text, x28 y140, Offender's Last Known Vehicle
+	Gui, Add, Edit, gUpdateTimes x400 y140 w200 vVehicle
+	Gui, Add, Text, x28 y160, Arresting Officer
+	Gui, Add, Edit, gUpdateTimes x400 y160 w200 vOfficer
+	Gui, Add, Text, x28 y180, Cruiser Number
+	Gui, Add, Edit, gUpdateTimes x400 y180 w200 vCruiser
+	Gui, Add, Text, x28 y220, Confiscated Items
+	Gui, Add, Edit, gUpdateTimes x400 y220 w200 r5 vConfiscate
+	Gui, Add, Text, x28 y300, Vehicle(s) Impounded
+	Gui, Add, Edit, gUpdateTimes x400 y300 w200 r5 vImpounded
+	Gui, Add, Text, x28 y380, Summarize what happened
+	Gui, Add, Edit, gUpdateTimes x400 y380 w200 r5 vSummary
+	Gui, Add, Checkbox, gUpdateTimes x620 y80 vDaylightSavings, Daylight Savings Time (DST)
 	Gui, Tab,
 	Gui, Add, Checkbox, x28 gUpdateTimes vFineArrest, Include Fine on /arrest
 	Gui, Add, Checkbox, x28 gUpdateTimes vStrikeArrest, Include Strikes on /arrest
@@ -297,8 +319,39 @@ RecordCrimes:
 	Gosub, UpdateTimes
 	RecordingCrimes:=False
 Return
-
+GenerateReport:
+	ReportAppending:=True
+	Gosub, UpdateTimes
+	ReportAppending:=False
+	MsgBox, Report made! Open %AppendingFile% to view it.
+Return
 UpdateTimes:
+	If ReportAppending
+	{
+		FileDelete, %AppendingFile%
+		FileAppend,
+		(
+[CENTER][FONT=Arial][IMG]http://i.imgur.com/jUIyIJs.png[/IMG][/FONT]
+[B][FONT=Arial]Criminal Resources Department[/FONT][/B][/CENTER]
+[LEFT][FONT=Arial][SIZE=3]
+[B]Mugshot[/B]:[/SIZE][/FONT][/LEFT]
+
+[LEFT][SIZE=3][FONT=Arial][B]Offender's Full Name[/B]: %CrimScum%
+
+[B]Offender's Contact information[/B]:
+Phone number: %Phones%
+House: %House%
+Business: %Business%
+Last known vehicle: %Vehicle%[/FONT][/SIZE]
+[B][FONT=Arial][SIZE=3]
+Arresting Officer[/SIZE][/FONT][/B][SIZE=3][FONT=Arial]: %Officer%[/FONT][/SIZE]
+[B][FONT=Arial][SIZE=3]
+Cruiser Number[/SIZE][/FONT][/B][FONT=Arial][SIZE=3]: %Cruiser%[/SIZE][/FONT]
+[B][FONT=Arial][SIZE=3]
+Crimes Committed[/SIZE][/FONT][/B][FONT=Arial][SIZE=3]:
+
+		), %AppendingFile%
+	}
 	Gui, Submit, NoHide
 	TicketCash:=0
 	Mins:=0
@@ -321,6 +374,8 @@ UpdateTimes:
 		Mins+=30
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Brandishing a Firearm{Enter}
+		If ReportAppending
+			FileAppend, Brandishing a Firearm`n, %AppendingFile%
 	}
 	If IllegalParking
 	{
@@ -367,6 +422,8 @@ UpdateTimes:
 		Mins+=10
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Failure To Accept a Ticket{Enter}
+		If ReportAppending
+			FileAppend, Failure To Accept a Ticket`n, %AppendingFile%
 	}
 	If UnregisteredVehicle
 	{
@@ -375,12 +432,16 @@ UpdateTimes:
 			LicenseStrikes:=2
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Driving an unregistered vehicle{Enter}
+		If ReportAppending
+			FileAppend,  Driving an unregistered vehicle`n, %AppendingFile%
 	}
 	If LicenseFailure
 	{
 		Mins+=20
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Failure to Provide License{Enter}
+		If ReportAppending
+			FileAppend,  Failure to Provide License`n, %AppendingFile%
 	}
 	If VehicleEvading
 	{
@@ -393,6 +454,8 @@ UpdateTimes:
 			Notes = Not to be stacked with "Evading a police officer on foot" (Evading in a vehicle)
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Evading an LEO (Vehicle){Enter}
+		If ReportAppending
+			FileAppend,  Evading an LEO (Vehicle)`n, %AppendingFile%
 	}
 	If TicketPayTime
 	{
@@ -404,6 +467,8 @@ UpdateTimes:
 			Notes = Custom Fine = 3 times the ticket price (Failure to pay a ticket on time)
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Failure to pay a ticket on time{Enter}
+		If ReportAppending
+			FileAppend,  Failure to pay a ticket on time`n, %AppendingFile%
 	}
 	If AttemptedGTA
 	{
@@ -412,6 +477,8 @@ UpdateTimes:
 			LicenseStrikes:=3
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% (Attempted) Grand Theft Auto{Enter}
+		If ReportAppending
+			FileAppend,  (Attempted) Grand Theft Auto`n, %AppendingFile%
 	}
 	If DUI
 	{
@@ -420,6 +487,8 @@ UpdateTimes:
 			LicenseStrikes:=2
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Driving Under the Influence{Enter}
+		If ReportAppending
+			FileAppend,  Driving Under the Influence`n, %AppendingFile%
 	}
 	If HnR
 	{
@@ -428,12 +497,16 @@ UpdateTimes:
 			LicenseStrikes:=3
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Hit and Run{Enter}
+		If ReportAppending
+			FileAppend,  Hit and Run`n, %AppendingFile%
 	}
 	If DwS
 	{
 		Mins+=40
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Driving While Suspended{Enter}
+		If ReportAppending
+			FileAppend,  Driving While Suspended`n, %AppendingFile%
 	}
 	If Racing
 	{
@@ -443,6 +516,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Street Racing{Enter}
+		If ReportAppending
+			FileAppend,  Street Racing`n, %AppendingFile%
 	}
 	If GTA
 	{
@@ -452,6 +527,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Grand Theft Auto{Enter}
+		If ReportAppending
+			FileAppend,  Grand Theft Auto`n, %AppendingFile%
 	}
 	If VehAssualt
 	{
@@ -461,24 +538,32 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Vehicular Assault{Enter}
+		If ReportAppending
+			FileAppend,  Vehicular Assault`n, %AppendingFile%
 	}
 	If Loitering
 	{
 		Mins+=10
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Loitering{Enter}
+		If ReportAppending
+			FileAppend,  Loitering`n, %AppendingFile%
 	}
 	If Trespassing
 	{
 		Mins+=15
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Trespassing{Enter}
+		If ReportAppending
+			FileAppend,  Trespassing`n, %AppendingFile%
 	}
 	If IndecentExposure
 	{
 		Mins+=10
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Indecent Exposure{Enter}
+		If ReportAppending
+			FileAppend,  Indecent Exposure`n, %AppendingFile%
 	}
 	If Vandalism
 	{
@@ -490,18 +575,24 @@ UpdateTimes:
 			Notes = Custom Fine = Damages caused (Vandalism)
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Vandalism{Enter}
+		If ReportAppending
+			FileAppend,  Vandalism`n, %AppendingFile%
 	}
 	If Affray
 	{
 		Mins+=20
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Affray{Enter}
+		If ReportAppending
+			FileAppend,  Affray`n, %AppendingFile%
 	}
 	If ResistingPhysical
 	{
 		Mins+=25
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Resisting Arrest{Enter}
+		If ReportAppending
+			FileAppend,  Resisting Arrest`n, %AppendingFile%
 	}
 	If EvadingFoot
 	{
@@ -515,138 +606,184 @@ UpdateTimes:
 		If RecordingCrimes
 			If not VehicleEvading
 				Send, t^a/recordcrime %CrimScum% Evading an LEO (Foot){Enter}
+		If ReportAppending
+			FileAppend,  Evading an LEO (Foot)`n, %AppendingFile%
 	}
 	If DisorderlyConduct
 	{
 		Mins+=10
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Disorderly Conduct{Enter}
+		If ReportAppending
+			FileAppend,  Disorderly Conduct`n, %AppendingFile%
 	}
 	If AidingAbettingInfractions
 	{
 		Mins+=20
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Aiding and Abetting (Infractions){Enter}
+		If ReportAppending
+			FileAppend,  Aiding and Abetting (Infractions)`n, %AppendingFile%
 	}
 	If MeleeWeaponPossession
 	{
 		Mins+=15
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Unlawful Possession of a Melee Weapon{Enter}
+		If ReportAppending
+			FileAppend,  Unlawful Possession of a Melee Weapon`n, %AppendingFile%
 	}
 	If MeleeWeaponSoliciting
 	{
 		Mins+=10
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Soliciting of a Melee Weapon{Enter}
+		If ReportAppending
+			FileAppend,  Soliciting of a Melee Weapon`n, %AppendingFile%
 	}
 	If LowCalWeaponSemiAutomatic
 	{
 		Mins+=30
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Unlawful Possession of a Low Caliber Weapon (Semi-Automatic){Enter}
+		If ReportAppending
+			FileAppend,  Unlawful Possession of a Low Caliber Weapon (Semi-Automatic)`n, %AppendingFile%
 	}
 	If LowCalWeaponFullyAutomatic
 	{
 		Mins+=45
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Unlawful Possession of a Low Caliber Weapon (Fully-Automatic){Enter}
+		If ReportAppending
+			FileAppend,  Unlawful Possession of a Low Caliber Weapon (Fully-Automatic)`n, %AppendingFile%
 	}
 	If ValidIDFailure
 	{
 		Mins+=15
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Failure to Provide ID{Enter}
+		If ReportAppending
+			FileAppend,  Failure to Provide ID`n, %AppendingFile%
 	}
 	If CounterfeitDocs
 	{
 		Mins+=20
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Possession of Counterfeit Documentation{Enter}
+		If ReportAppending
+			FileAppend,  Possession of Counterfeit Documentation`n, %AppendingFile%
 	}
 	If SolicitingLowCal
 	{
 		Mins+=20
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Soliciting Low Caliber Weapons{Enter}
+		If ReportAppending
+			FileAppend,  Soliciting Low Caliber Weapons`n, %AppendingFile%
 	}
 	If SilencedPossession
 	{
 		Mins+=35
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Unlawful Possession of a Silenced Low Caliber Weapon{Enter}
+		If ReportAppending
+			FileAppend,  Unlawful Possession of a Silenced Low Caliber Weapon`n, %AppendingFile%
 	}
 	If SolicitingSilenced
 	{
 		Mins+=25
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Soliciting Low Caliber Silenced Weapons{Enter}
+		If ReportAppending
+			FileAppend,  Soliciting Low Caliber Silenced Weapons`n, %AppendingFile%
 	}
 	If Impersonating
 	{
 		Mins+=30
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Impersonating an LEO{Enter}
+		If ReportAppending
+			FileAppend,  Impersonating an LEO`n, %AppendingFile%
 	}
 	If Obstruction
 	{
 		Mins+=40
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Obstruction of Justice{Enter}
+		If ReportAppending
+			FileAppend,  Obstruction of Justice`n, %AppendingFile%
 	}
 	If MurderConspiracy
 	{
 		Mins+=40
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Conspiracy to Commit Murder{Enter}
+		If ReportAppending
+			FileAppend,  Conspiracy to Commit Murder`n, %AppendingFile%
 	}
 	If Harassment
 	{
 		Mins+=25
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Harassment{Enter}
+		If ReportAppending
+			FileAppend,  Harassment`n, %AppendingFile%
 	}
 	If FirearmDischargeSingle
 	{
 		Mins+=30
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Unlawful Discharge of Firearm (Single Shot){Enter}
+		If ReportAppending
+			FileAppend,  Unlawful Discharge of Firearm (Single Shot)`n, %AppendingFile%
 	}
 	If FirearmDischargeMulti
 	{
 		Mins+=40
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Unlawful Discharge of Firearm (Multiple shots){Enter}
+		If ReportAppending
+			FileAppend,  Unlawful Discharge of Firearm (Multiple shots)`n, %AppendingFile%
 	}
 	If PEndangerment
 	{
 		Mins+=30
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Public Endangerment{Enter}
+		If ReportAppending
+			FileAppend,  Public Endangerment`n, %AppendingFile%
 	}
 	If Fraud
 	{
 		Mins+=25
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Fraud{Enter}
+		If ReportAppending
+			FileAppend,  Fraud`n, %AppendingFile%
 	}
 	If LyingToLEO
 	{
 		Mins+=25
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Lying to an LEO in function{Enter}
+		If ReportAppending
+			FileAppend,  Lying to an LEO in function`n, %AppendingFile%
 	}
 	If AidingAbettingMisdemeanors
 	{
 		Mins+=30
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Aiding and Abetting (Misdemeanors){Enter}
+		If ReportAppending
+			FileAppend,  Aiding and Abetting (Misdemeanors)`n, %AppendingFile%
 	}
 	If CounterfeitProduction
 	{
 		Mins+=30
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Trafficking/Production of Counterfeit Documentation{Enter}
+		If ReportAppending
+			FileAppend,  Trafficking/Production of Counterfeit Documentation`n, %AppendingFile%
 	}
 	If 911Misuse
 	{
@@ -657,6 +794,8 @@ UpdateTimes:
 			Notes = Custom Time = 10-30 mins (Misuse of 911)
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Misuse of 911{Enter}
+		If ReportAppending
+			FileAppend,  Misuse of 911`n, %AppendingFile%
 	}
 	If HighCalWeaponPossession
 	{
@@ -664,6 +803,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Unlawful Possession of a High Caliber Firearm{Enter}
+		If ReportAppending
+			FileAppend,  Unlawful Possession of a High Caliber Firearm`n, %AppendingFile%
 	}
 	If DeaglePossession
 	{
@@ -671,6 +812,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Unlawful Possession of a Desert Eagle{Enter}
+		If ReportAppending
+			FileAppend,  Unlawful Possession of a Desert Eagle`n, %AppendingFile%
 	}
 	If HighCalWeaponSoliciting
 	{
@@ -678,6 +821,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Soliciting High Caliber Weapons{Enter}
+		If ReportAppending
+			FileAppend,  Soliciting High Caliber Weapons`n, %AppendingFile%
 	}
 	If DeagleSoliciting
 	{
@@ -685,6 +830,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Soliciting Desert Eagle{Enter}
+		If ReportAppending
+			FileAppend,  Soliciting Desert Eagle`n, %AppendingFile%
 	}
 	If Manslaughter
 	{
@@ -692,6 +839,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Manslaughter{Enter}
+		If ReportAppending
+			FileAppend,  Manslaughter`n, %AppendingFile%
 	}
 	If MurderAccessory
 	{
@@ -699,6 +848,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Accessory to Murder{Enter}
+		If ReportAppending
+			FileAppend,  Accessory to Murder`n, %AppendingFile%
 	}
 	If AttemptedMurder
 	{
@@ -706,6 +857,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Attempted Murder{Enter}
+		If ReportAppending
+			FileAppend,  Attempted Murder`n, %AppendingFile%
 	}
 	If AttemptedMurderLEO
 	{
@@ -713,6 +866,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Attempted Murder of an LEO{Enter}
+		If ReportAppending
+			FileAppend,  Attempted Murder of an LEO`n, %AppendingFile%
 	}
 	If MurderAccomplice
 	{
@@ -720,6 +875,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Accomplice to Murder{Enter}
+		If ReportAppending
+			FileAppend,  Accomplice to Murder`n, %AppendingFile%
 	}
 	If InstigatingAnarchy
 	{
@@ -727,6 +884,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Instigating Public Anarchy{Enter}
+		If ReportAppending
+			FileAppend,  Instigating Public Anarchy`n, %AppendingFile%
 	}
 	If Racketeering
 	{
@@ -734,6 +893,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Racketeering{Enter}
+		If ReportAppending
+			FileAppend,  Racketeering`n, %AppendingFile%
 	}
 	If Kidnapping
 	{
@@ -741,6 +902,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Kidnapping{Enter}
+		If ReportAppending
+			FileAppend,  Kidnapping`n, %AppendingFile%
 	}
 	If KidnappingLEO
 	{
@@ -748,6 +911,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Kidnapping an LEO{Enter}
+		If ReportAppending
+			FileAppend,  Kidnapping an LEO`n, %AppendingFile%
 	}
 	If AttemptedRobbery
 	{
@@ -755,6 +920,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Attempted Robbery{Enter}
+		If ReportAppending
+			FileAppend,  Attempted Robbery`n, %AppendingFile%
 	}
 	If Robbery
 	{
@@ -762,6 +929,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Robbery{Enter}
+		If ReportAppending
+			FileAppend,  Robbery`n, %AppendingFile%
 	}
 	If ArmedRobbery
 	{
@@ -769,6 +938,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Armed Robbery{Enter}
+		If ReportAppending
+			FileAppend,  Armed Robbery`n, %AppendingFile%
 	}
 	If Burglary
 	{
@@ -776,6 +947,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Burglary{Enter}
+		If ReportAppending
+			FileAppend,  Burglary`n, %AppendingFile%
 	}
 	If Gambling
 	{
@@ -783,6 +956,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Illegal Gambling{Enter}
+		If ReportAppending
+			FileAppend,  Illegal Gambling`n, %AppendingFile%
 	}
 	If Bribery
 	{
@@ -790,6 +965,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Bribery{Enter}
+		If ReportAppending
+			FileAppend,  Bribery`n, %AppendingFile%
 	}
 	If Assault
 	{
@@ -797,6 +974,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Assault{Enter}
+		If ReportAppending
+			FileAppend,  Assault`n, %AppendingFile%
 	}
 	If AssaultLEO
 	{
@@ -804,6 +983,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Assault of an LEO{Enter}
+		If ReportAppending
+			FileAppend,  Assault of an LEO`n, %AppendingFile%
 	}
 	If Battery
 	{
@@ -811,6 +992,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Battery{Enter}
+		If ReportAppending
+			FileAppend,  Battery`n, %AppendingFile%
 	}
 	If BatteryLEO
 	{
@@ -818,6 +1001,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Battery of an LEO{Enter}
+		If ReportAppending
+			FileAppend,  Battery of an LEO`n, %AppendingFile%
 	}
 	If BatteryWeap
 	{
@@ -825,6 +1010,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Battery with a deadly weapon{Enter}
+		If ReportAppending
+			FileAppend,  Battery with a deadly weapon`n, %AppendingFile%
 	}
 	If BatteryWeapLEO
 	{
@@ -832,6 +1019,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Battery with a deadly weapon of an LEO{Enter}
+		If ReportAppending
+			FileAppend,  Battery with a deadly weapon of an LEO`n, %AppendingFile%
 	}
 	If Extortion
 	{
@@ -839,6 +1028,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Extortion{Enter}
+		If ReportAppending
+			FileAppend,  Extortion`n, %AppendingFile%
 	}
 	If Scamming
 	{
@@ -846,6 +1037,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Scamming{Enter}
+		If ReportAppending
+			FileAppend,  Scamming`n, %AppendingFile%
 	}
 	If Arson
 	{
@@ -853,6 +1046,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Arson{Enter}
+		If ReportAppending
+			FileAppend,  Arson`n, %AppendingFile%
 	}
 	If AidingAbettingCapital
 	{
@@ -860,6 +1055,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Aiding and Abetting (Felonies){Enter}
+		If ReportAppending
+			FileAppend,  Aiding and Abetting (Felonies)`n, %AppendingFile%
 	}
 	If FugitiveHarboring
 	{
@@ -871,6 +1068,8 @@ UpdateTimes:
 			Notes = Impound Vehicle (Harboring a Fugitive in a Vehicle)
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Harboring a Fugitive{Enter}
+		If ReportAppending
+			FileAppend,  Harboring a Fugitive`n, %AppendingFile%
 	}
 	If ExplosivesPossession
 	{
@@ -878,6 +1077,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Possession of Explosives{Enter}
+		If ReportAppending
+			FileAppend,  Possession of Explosives`n, %AppendingFile%
 	}
 	If TerrorismConspiracy
 	{
@@ -885,6 +1086,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Conspiracy to Commit Terrorism{Enter}
+		If ReportAppending
+			FileAppend,  Conspiracy to Commit Terrorism`n, %AppendingFile%
 	}
 	If DomesticTerrorism
 	{
@@ -892,6 +1095,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Domestic Terrorism{Enter}
+		If ReportAppending
+			FileAppend,  Domestic Terrorism`n, %AppendingFile%
 	}
 	If Murder
 	{
@@ -899,6 +1104,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Murder{Enter}
+		If ReportAppending
+			FileAppend,  Murder`n, %AppendingFile%
 	}
 	If MurderLEO
 	{
@@ -906,6 +1113,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Murder of an LEO{Enter}
+		If ReportAppending
+			FileAppend,  Murder of an LEO`n, %AppendingFile%
 	}
 	If MassMurder
 	{
@@ -913,6 +1122,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Mass Murder{Enter}
+		If ReportAppending
+			FileAppend,  Mass Murder`n, %AppendingFile%
 	}
 	If Corruption
 	{
@@ -920,6 +1131,8 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Corruption{Enter}
+		If ReportAppending
+			FileAppend,  Corruption`n, %AppendingFile%
 	}
 	If Piracy
 	{
@@ -927,24 +1140,32 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Piracy{Enter}
+		If ReportAppending
+			FileAppend,  Piracy`n, %AppendingFile%
 	}
 	If SolicitingMaterials
 	{
 		Mins+=30
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Soliciting of Materials{Enter}
+		If ReportAppending
+			FileAppend,  Soliciting of Materials`n, %AppendingFile%
 	}
 	If TrafikingStreetArmour
 	{
 		Mins+=40
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Trafiking Street Armour{Enter}
+		If ReportAppending
+			FileAppend,  Trafiking Street Armour`n, %AppendingFile%
 	}
 	If TrafikingStandardArmour
 	{
 		Mins+=50
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Trafiking Standard Armour{Enter}
+		If ReportAppending
+			FileAppend,  Trafiking Standard Armour`n, %AppendingFile%
 	}
 	If TrafikingMilitaryArmour
 	{
@@ -952,18 +1173,24 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Trafiking Military Armour{Enter}
+		If ReportAppending
+			FileAppend,  Trafiking Military Armour`n, %AppendingFile%
 	}
 	If TrafikingMeleeWeapons
 	{
 		Mins+=25
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Trafiking Melee Weapons{Enter}
+		If ReportAppending
+			FileAppend,  Trafiking Melee Weapons`n, %AppendingFile%
 	}
 	If TrafikingLowCalWeapons
 	{
 		Mins+=40
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Trafiking Low Caliber Weapons{Enter}
+		If ReportAppending
+			FileAppend,  Trafiking Low Caliber Weapons`n, %AppendingFile%
 	}
 	If TrafikingHighCalWeapons
 	{
@@ -971,48 +1198,64 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Trafiking High Caliber Weapons{Enter}
+		If ReportAppending
+			FileAppend,  Trafiking High Caliber Weapons`n, %AppendingFile%
 	}
 	If SolicitingArmour
 	{
 		Mins+=25
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Soliciting Illegal Body Armour{Enter}
+		If ReportAppending
+			FileAppend,  Soliciting Illegal Body Armour`n, %AppendingFile%
 	}
 	If SolicitingCocaine
 	{
 		Mins+=20
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Soliciting of Cocaine{Enter}
+		If ReportAppending
+			FileAppend,  Soliciting of Cocaine`n, %AppendingFile%
 	}
 	If SolicitingAmphetamine
 	{
 		Mins+=20
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Soliciting of Amphetamine (Speed){Enter}
+		If ReportAppending
+			FileAppend,  Soliciting of Amphetamine (Speed)`n, %AppendingFile%
 	}
 	If SolicitingMeth
 	{
 		Mins+=25
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Soliciting of Amphetamine (Meth){Enter}
+		If ReportAppending
+			FileAppend,  Soliciting of Amphetamine (Meth)`n, %AppendingFile%
 	}
 	If SolicitingMarijuana
 	{
 		Mins+=10
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Soliciting of Marijuana{Enter}
+		If ReportAppending
+			FileAppend,  Soliciting of Marijuana`n, %AppendingFile%
 	}
 	If SmugglingContraband
 	{
 		Mins+=50
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Smuggling Contraband{Enter}
+		If ReportAppending
+			FileAppend,  Smuggling Contraband`n, %AppendingFile%
 	}
 ;===============================================
 	If PotPos
 	{
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Possession of Marijuana (%Pot%g){Enter}
+		If ReportAppending
+			FileAppend,  Possession of Marijuana (%Pot%g)`n, %AppendingFile%
 	}
 	If (Pot > 20) and (Pot < 101) and (PotPos)
 	{
@@ -1045,6 +1288,8 @@ UpdateTimes:
 	{
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Possession of Cocaine (%Coke%g){Enter}
+		If ReportAppending
+			FileAppend,  Possession of Cocaine (%Coke%g)`n, %AppendingFile%
 	}	
 	If (Coke < 6) and (CokePos)
 	{
@@ -1101,6 +1346,8 @@ UpdateTimes:
 	{
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Possession of Amphetamine (Speed - %Speed% Tablets){Enter}
+		If ReportAppending
+			FileAppend,  Possession of Amphetamine (Speed - %Speed% Tablets)`n, %AppendingFile%
 	}	
 	If (Speed < 6) and(SpeedPos)
 	{
@@ -1144,6 +1391,8 @@ UpdateTimes:
 	{
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Possession of Amphetamine (Meth - %Meth%g){Enter}
+		If ReportAppending
+			FileAppend,  Possession of Amphetamine (Meth - %Meth%g)`n, %AppendingFile%
 	}	
 	If (Meth < 6) and(MethPos)
 	{
@@ -1205,13 +1454,29 @@ UpdateTimes:
 		If RecordingCrimes
 		{
 			If PotTrafiking
+			{
 				Send, t^a/recordcrime %CrimScum% Trafiking of Contraband (Marijuana){Enter}
+				If ReportAppending
+					FileAppend,  Trafiking of Contraband (Marijuana)`n, %AppendingFile%
+			}
 			If CokeTrafiking
+			{
 				Send, t^a/recordcrime %CrimScum% Trafiking of Contraband (Cocaine){Enter}
+				If ReportAppending
+					FileAppend,  Trafiking of Contraband (Cocaine)`n, %AppendingFile%
+			}
 			If SpeedTrafiking
+			{
 				Send, t^a/recordcrime %CrimScum% Trafiking of Contraband (Amphetamine - Speed){Enter}
+				If ReportAppending
+					FileAppend,  Trafiking of Contraband (Amphetamine - Speed)`n, %AppendingFile%
+			}
 			If MethTrafiking
+			{
 				Send, t^a/recordcrime %CrimScum% Trafiking of Contraband (Amphetamine - Meth){Enter}
+				If ReportAppending
+					FileAppend,  Trafiking of Contraband (Amphetamine - Meth)`n, %AppendingFile%
+			}
 		}
 	}
 
@@ -1219,6 +1484,8 @@ UpdateTimes:
 	If StreetPos
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Possession of Street Materials (%StreetMats%){Enter}
+		If ReportAppending
+			FileAppend,  Possession of Street Materials (%StreetMats%)`n, %AppendingFile%
 	If (StreetMats > 30) and (StreetMats < 61) and (StreetPos)
 	{
 		Mins+=10
@@ -1261,6 +1528,8 @@ UpdateTimes:
 	If StandardPos
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Possession of Standard Materials (%StandardMats%){Enter}
+		If ReportAppending
+			FileAppend,  Possession of Standard Materials (%StandardMats%)`n, %AppendingFile%
 	If (StandardMats < 30) and (StandardPos)
 	{
 		Mins+=10
@@ -1307,6 +1576,8 @@ UpdateTimes:
 	If MilitaryPos
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Possession of Military Materials (%MilitaryMats%){Enter}
+		If ReportAppending
+			FileAppend,  Possession of Military Materials (%MilitaryMats%)`n, %AppendingFile%
 	If (MilitaryMats < 30) and (MilitaryPos)
 	{
 		Mins+=20
@@ -1358,6 +1629,8 @@ UpdateTimes:
 			Notes = Assume Traffiking (Standard Mats)
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Trafiking Street Materials{Enter}
+		If ReportAppending
+			FileAppend,  Trafiking Street Materials`n, %AppendingFile%
 	}
 	If StreetMatsTrafiking
 	{
@@ -1368,6 +1641,8 @@ UpdateTimes:
 			Notes = Assume Traffiking (Street Mats)
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Trafiking Standard Materials{Enter}
+		If ReportAppending
+			FileAppend,  Trafiking Standard Materials`n, %AppendingFile%
 	}
 	If MilitaryMatsTrafiking
 	{
@@ -1379,12 +1654,16 @@ UpdateTimes:
 		Bail = No
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Trafiking Military Materials{Enter}
+		If ReportAppending
+			FileAppend,  Trafiking Military Materials`n, %AppendingFile%
 	}
 ; ======================================================
 
 	If AmmoPos
 		If RecordingCrimes
 			Send, t^a/recordcrime %CrimScum% Possession of Illegal Ammunition (%Ammo%){Enter}
+		If ReportAppending
+			FileAppend,  Possession of Illegal Ammunition (%Ammo%)`n, %AppendingFile%
 	If (Ammo < 10) and (AmmoPos)
 	{
 		FineCash+=5000
@@ -1445,4 +1724,37 @@ UpdateTimes:
 		Notes = None
 	GuiControl, Text, EditableText, Ticket Total: $%TicketCash%`nTime Total: %Mins% Mins %MaxTimeMessage%`nFine Total: $%FineCash%`nLicense Strikes: %LicenseStrikes% Strikes`nBail: %Bail%
 	GuiControl, Text, EditableTextNotes, Notes:`n%Notes%
+	If ReportAppending
+	{
+	If DaylightSavings
+		MTGTime:=A_NowUTC-10000
+	Else
+		MTGTime:=A_NowUTC
+	;YYYY MM DD HH MM SS
+	Year := SubStr(MTGTime, 1, 4)
+	Month := SubStr(MTGTime, 5, 2)
+	Day := SubStr(MTGTime, 7, 2)
+	Hour := SubStr(MTGTime, 9, 2)
+	Minute := SubStr(MTGTime, 11, 2)
+	Second := SubStr(MTGTime, 13, 2)
+	FileAppend, 
+	(
+[/SIZE][/FONT]
+[B][FONT=Arial][SIZE=3]
+License Strikes[/SIZE][/FONT][/B][FONT=Arial][SIZE=3]: %LicenseStrikes%[/SIZE][/FONT]
+[B][FONT=Arial][SIZE=3]
+Confiscated Items[/SIZE][/FONT][/B][FONT=Arial][SIZE=3]: %Confiscate%[/SIZE][/FONT]
+[B][FONT=Arial][SIZE=3]
+Vehicle(s) Impounded[/SIZE][/FONT][/B][FONT=Arial][SIZE=3]: %Impounded%[/SIZE][/FONT]
+[B][FONT=Arial][SIZE=3]
+Summarize what happened[/SIZE][/FONT][/B][FONT=Arial][SIZE=3]: %Summary%[/SIZE][/FONT]
+[B][FONT=Arial][SIZE=3]
+Time and date of the arrest[/SIZE][/FONT][/B][FONT=Arial][SIZE=3]: %Hour%:%Minute% - %Year%/%Month%/%Day%[/SIZE][/FONT]
+[B][FONT=Arial][SIZE=3]
+Associated Reports[/SIZE][/FONT][/B][FONT=Arial][SIZE=3]:[/SIZE][/FONT]
+[B][FONT=Arial][SIZE=3]
+Additional notes (optional)[/SIZE][/FONT][/B][FONT=Arial][SIZE=3]:[/SIZE][/FONT][/LEFT]
+[IMG]
+	), %AppendingFile%
+	}
 Return
