@@ -1,8 +1,8 @@
 This is the LSPD Calculator made for Moving Target Gaming SA:MP RP (mt-gaming.com)
 
-You may use this at any time, but do not distribute it without giving credit to the original owner
+You may use this at any time, but do not distribute under any curcimstances.
 
-Owner: Douglas Spear (aka New Era/RedNeckSnailSpit)
+Owner: RedNeckSnailSpit
 Contact: doug4347@gmail.com
 
 Licence: GNU GENERAL PUBLIC LICENSE
